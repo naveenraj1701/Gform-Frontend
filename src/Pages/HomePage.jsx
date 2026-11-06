@@ -6,13 +6,14 @@ import { RxCross1 } from "react-icons/rx";
 import NavBar from "../Components/NavBar";
 import PreviewForm from "../Components/PreviewForm";
 import Profile from "../Components/Profile";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { FaDownload, FaFilePdf, FaShareAlt } from "react-icons/fa";
 
 const url = process.env.REACT_APP_URL;
 
 export default function HomePage() {
 
-
+    const navigate = useNavigate()
     const pdfInputRef = useRef(null);
     const { question, setQuestion } = useContext(Datacon);
 
@@ -187,60 +188,60 @@ export default function HomePage() {
 
     const createFormFetch = async () => {
         try {
-        console.log("Submit Form clicked");
-        console.log("Form ID:", formId);
+            console.log("Submit Form clicked");
+            console.log("Form ID:", formId);
 
-        if (!formId) {
-            alert("Form ID is missing. Please create a form first.");
-            return;
+            if (!formId) {
+                alert("Form ID is missing. Please create a form first.");
+                return;
+            }
+
+            const formResponse = await fetch(`${url}/update-form/${formId}`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: desc.name,
+                    description: desc.nameDesc
+                })
+            });
+
+            const formData = await formResponse.json();
+            console.log("Update form response:", formData);
+
+            if (!formData.success) {
+                alert(formData.message);
+                return;
+            }
+
+            const questionsResponse = await fetch(`${url}/create-questions`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    TestId: formId,
+                    typeOfQuestions: "mixed",
+                    questions: question
+                })
+            });
+
+            const questionsData = await questionsResponse.json();
+            console.log("Save questions response:", questionsData);
+
+            if (questionsData.success) {
+                alert("Form saved successfully");
+            } else {
+                alert(questionsData.message);
+            }
+        } catch (err) {
+            console.log("Error saving form:", err);
+            alert("Unable to save form");
         }
-
-        const formResponse = await fetch(`${url}/update-form/${formId}`, {
-            method: "PUT",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title: desc.name,
-                description: desc.nameDesc
-            })
-        });
-
-        const formData = await formResponse.json();
-        console.log("Update form response:", formData);
-
-        if (!formData.success) {
-            alert(formData.message);
-            return;
-        }
-
-        const questionsResponse = await fetch(`${url}/create-questions`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                TestId: formId,
-                typeOfQuestions: "mixed",
-                questions: question
-            })
-        });
-
-        const questionsData = await questionsResponse.json();
-        console.log("Save questions response:", questionsData);
-
-        if (questionsData.success) {
-            alert("Form saved successfully");
-        } else {
-            alert(questionsData.message);
-        }
-    } catch (err) {
-        console.log("Error saving form:", err);
-        alert("Unable to save form");
-    }
-};
+    };
 
     const deleteQuestionFetch = async (questionId, index) => {
         if (!formId || !questionId) {
@@ -369,6 +370,14 @@ export default function HomePage() {
         }
     };
 
+    //Share button handle//
+
+    const handleShare = () => {
+        const shareUrl = `${window.location.origin}/answer/${formId}`
+
+        window.open(shareUrl, "_blank")
+    }
+
 
 
     return (
@@ -398,13 +407,29 @@ export default function HomePage() {
                             </p>
                         </div>
 
+
+
                         <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => navigate(`/form-responses/${formId}`)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
+                            >
+                                Responses
+                            </button>
+                            <button className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-5 py-3 rounded-xl font-medium flex items-center gap-2 shadow-sm transition"
+                                onClick={handleShare}
+                                disabled={!formId}>
+                                <FaShareAlt size={16} />
+                                <span>Share</span>
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={() => pdfInputRef.current?.click()}
-                                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 font-medium text-white shadow-md transition hover:scale-105"
+                                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 font-medium text-white shadow-md transition hover:scale-105 flex items-center gap-2"
                             >
-                                Upload PDF
+                                <FaFilePdf size={16} />
+                                <span>Upload PDF</span>
                             </button>
 
                             <button
@@ -412,16 +437,13 @@ export default function HomePage() {
                                 disabled={!formId}
                                 onClick={() => {
                                     if (formId) {
-                                       
-                                        window.open(
-                                            `${url}/download-form/${formId}`,
-                                            "_blank"
-                                        );
+                                        window.open(`${url}/download-form/${formId}`, "_blank")
                                     }
                                 }}
-                                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 font-medium text-white shadow-md transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 font-medium text-white shadow-md transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
                             >
-                                Download Form
+                                <FaDownload size={16} />
+                                <span>Download Form</span>
                             </button>
                         </div>
                     </div>

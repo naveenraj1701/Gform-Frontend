@@ -5,6 +5,8 @@ import RegisterPage from './Pages/RegisterPage';
 import LoginPage from './Pages/LoginPage';
 import AdminDashboard from './Pages/AdminDashboard';
 import FormDashboard from './Pages/FormDashboard';
+import AnswerForm from './Components/AnswerForm';
+import FormResponsePage from './Pages/FormResponsePage';
 function App() {
   const role = localStorage.getItem("role");
   console.log("Local Storage ::", role)
@@ -15,6 +17,8 @@ function App() {
       <Route path='/login' element={<LoginPage />} />
       <Route path='/admin' element={<AdminDashboard />}/>
       <Route path='/blank' element={<FormDashboard />} />
+      <Route path='/answer/:formId' element={<AnswerForm />} />
+      <Route path="/form-responses/:formId" element={<FormResponsePage />} />
     </Routes>
   );
 }
